@@ -1,4 +1,4 @@
-package muxtagconfig_test
+package muxtagconfig
 
 import (
 	"encoding/json"
@@ -7,10 +7,9 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/Experticity/tagconfig"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	. "github.com/Experticity/muxtagconfig"
-	"github.com/Experticity/tagconfig"
 )
 
 type HackerReferences struct {
@@ -18,6 +17,10 @@ type HackerReferences struct {
 	SuperComputer string `mux.url:"super.computer" mux.form:"true"`
 	Rival         string `mux.url:"rival" mux.param:"true"`
 	Display       string `mux.url:"type" mux.path:"true"`
+}
+
+type SaltyMeats struct {
+	Bacon []string `mux.url:"bacon" mux.param:"true"`
 }
 
 func mockRequest(path string) *http.Request {
@@ -85,6 +88,36 @@ func TestMuxURLParamGet(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, rival, hr.Rival)
+}
+
+func TestMuxMultipleCSVURLParamToSliceGet(t *testing.T) {
+	bacon := "slice"
+	moreBacon := "bits"
+
+	req := mockRequest("/salty/meats/?bacon=" + bacon + "," + moreBacon)
+
+	hr := &SaltyMeats{}
+	mug := &MuxURLGetter{req}
+
+	err := tagconfig.Process(mug, hr)
+	assert.NoError(t, err)
+
+	assert.Equal(t, []string{bacon, moreBacon}, hr.Bacon)
+}
+
+func TestMuxMultipleURLParamToSliceGet(t *testing.T) {
+	bacon := "slice"
+	moreBacon := "bits"
+
+	req := mockRequest("/salty/meats/?bacon=" + bacon + "&bacon=" + moreBacon)
+
+	hr := &SaltyMeats{}
+	mug := &MuxURLGetter{Request: req}
+
+	err := tagconfig.Process(mug, hr)
+	assert.NoError(t, err)
+
+	assert.Equal(t, []string{bacon, moreBacon}, hr.Bacon)
 }
 
 func TestMuxURLPathVariableGet(t *testing.T) {
