@@ -5,8 +5,10 @@ import (
 	"net/url"
 	"reflect"
 
-	"github.com/gorilla/mux"
+	"strings"
+
 	"github.com/Experticity/tagconfig"
+	"github.com/gorilla/mux"
 )
 
 // ParseMuxRequestToStruct is a convenience method so to wrap the operations of creating a MuxURLGetter and running
@@ -65,9 +67,16 @@ func (mg *MuxURLGetter) Get(key string, f reflect.StructField) (v string) {
 	return ""
 }
 
-func tryURLValues(key string, vs url.Values) (v string, present bool) {
-	v = vs.Get(key)
-	present = v != ""
+func tryURLValues(key string, vs url.Values) (pVal string, present bool) {
+	p := vs[key]
+	if len(p) == 1 {
+		pVal = p[0]
+	} else if len(p) == 0 {
+		pVal = ""
+	} else {
+		pVal = strings.Join(p[:], ",")
+	}
+	present = pVal != ""
 
 	return
 }
